@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func handlerValidateChirp(w http.ResponseWriter, r *http.Request) {
+func handlerValidateChirps(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	type requestBody struct {
