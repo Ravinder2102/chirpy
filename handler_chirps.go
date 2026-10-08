@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Post struct {
+type Chirp struct {
 	ID        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -27,7 +27,7 @@ func (cfg *apiConfig) handlerCreateChirp(w http.ResponseWriter, r *http.Request)
 	}
 
 	type response struct {
-		Post
+		Chirp
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -50,12 +50,12 @@ func (cfg *apiConfig) handlerCreateChirp(w http.ResponseWriter, r *http.Request)
 		Body:   cleanedBody,
 		UserID: request.UserID})
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "couldn't create post", err)
+		respondWithError(w, http.StatusInternalServerError, "couldn't create chirp", err)
 		return
 	}
 
 	respondWithJson(w, http.StatusCreated, response{
-		Post: Post{
+		Chirp: Chirp{
 			ID:        post.ID,
 			CreatedAt: post.CreatedAt,
 			UpdatedAt: post.UpdatedAt,
@@ -64,6 +64,27 @@ func (cfg *apiConfig) handlerCreateChirp(w http.ResponseWriter, r *http.Request)
 		},
 	})
 
+}
+
+func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	chirps, err := cfg.db.GetChirps(r.Context())
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "couldn't list chirps", err)
+		return
+	}
+	response := []Chirp{}
+	for _, chirp := range chirps {
+		response = append(response, Chirp{
+			ID:        chirp.ID,
+			CreatedAt: chirp.CreatedAt,
+			UpdatedAt: chirp.UpdatedAt,
+			Body:      chirp.Body,
+			UserID:    chirp.UserID,
+		})
+	}
+	respondWithJson(w, http.StatusOK, response)
 }
 
 func replaceProfaneWords(text string) string {
