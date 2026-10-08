@@ -87,6 +87,29 @@ func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 	respondWithJson(w, http.StatusOK, response)
 }
 
+func (cfg *apiConfig) handlerGetChirp(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	id := r.PathValue("chirpID")
+	uuid, err := uuid.Parse(id)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "couldn't parse uuid string", err)
+		return
+	}
+	chirp, err := cfg.db.GetChirp(r.Context(), uuid)
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, "NOT FOUND!", err)
+		return
+	}
+
+	respondWithJson(w, http.StatusOK, Chirp{
+		ID:        chirp.ID,
+		CreatedAt: chirp.CreatedAt,
+		UpdatedAt: chirp.UpdatedAt,
+		Body:      chirp.Body,
+		UserID:    chirp.UserID,
+	})
+}
+
 func replaceProfaneWords(text string) string {
 	profaneWords := map[string]struct{}{
 		"kerfuffle": {},
