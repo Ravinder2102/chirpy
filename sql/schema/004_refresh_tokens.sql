@@ -1,4 +1,4 @@
--- +goose up
+-- +goose Up
 CREATE TABLE refresh_tokens (
     token TEXT PRIMARY KEY,
     created_at TIMESTAMP NOT NULL,
@@ -8,5 +8,5 @@ CREATE TABLE refresh_tokens (
     revoked_at TIMESTAMP
 );
 
--- +goose down
+-- +goose Down
 DROP TABLE refresh_tokens;
