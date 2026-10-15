@@ -17,6 +17,7 @@ type apiConfig struct {
 	db             *database.Queries
 	platform       string
 	jwtSecret      string
+	polkaKey       string
 }
 
 func main() {
@@ -34,6 +35,10 @@ func main() {
 	if jwtSecret == "" {
 		log.Fatalf("JWT_SECRET must be set")
 	}
+	polkaKey := os.Getenv("POLKA_KEY")
+	if polkaKey == "" {
+		log.Fatalf("POLKA_KEY must be set")
+	}
 
 	// open conn to db
 	db, err := sql.Open("postgres", dbURL)
@@ -50,6 +55,7 @@ func main() {
 		db:             dbQueries,
 		platform:       platform,
 		jwtSecret:      jwtSecret,
+		polkaKey:       polkaKey,
 	}
 
 	const filepathRoot = "."

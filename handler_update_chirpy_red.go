@@ -6,11 +6,22 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/Ravinder2102/chirpy/internal/auth"
 	"github.com/google/uuid"
 )
 
 func (cfg *apiConfig) handlerUpdateChirpyRed(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
+
+	apiKey, err := auth.GetAPIKey(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "couldn't find API Key", err)
+		return
+	}
+	if apiKey != cfg.polkaKey {
+		respondWithError(w, http.StatusUnauthorized, "API key is invalid", err)
+		return
+	}
 
 	type requestBody struct {
 		Event string `json:"event"`
@@ -21,7 +32,7 @@ func (cfg *apiConfig) handlerUpdateChirpyRed(w http.ResponseWriter, r *http.Requ
 
 	decoder := json.NewDecoder(r.Body)
 	request := requestBody{}
-	err := decoder.Decode(&request)
+	err = decoder.Decode(&request)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't decode request", err)
 		return
