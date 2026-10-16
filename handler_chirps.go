@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -88,6 +89,15 @@ func authorIDFromRequest(r *http.Request) (uuid.UUID, error) {
 	}
 	return authorID, nil
 }
+
+func sortOrderFromRequest(r *http.Request) (string, error) {
+	SortOrder := r.URL.Query().Get("sort")
+	if SortOrder == "" {
+		return "", nil
+	}
+	return SortOrder, nil
+}
+
 func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
@@ -95,6 +105,11 @@ func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid author ID", err)
 		return
+	}
+
+	sortOrder, err := sortOrderFromRequest(r)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid sort order", err)
 	}
 
 	var dbChirps []database.Chirp
@@ -108,7 +123,9 @@ func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, "couldn't list chirps", err)
 		return
 	}
-
+	if sortOrder == "desc" {
+		sort.Slice(dbChirps, func(i, j int) bool { return dbChirps[i].CreatedAt.After(dbChirps[j].CreatedAt) })
+	}
 	response := []Chirp{}
 	for _, dbChirp := range dbChirps {
 		response = append(response, Chirp{
